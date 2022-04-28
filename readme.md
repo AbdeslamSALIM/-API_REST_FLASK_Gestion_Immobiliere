@@ -5,7 +5,7 @@ API REST FLASK Gestion Immobiliere  using Flask, SQLAlchemy and the connecting F
 
 ## Logical Data Model
 
-![myimage-alt-tag](dbSchema\diagramme_logic.png)
+<img src="dbSchema\diagramme_logic.png"/>
 
 ### Installing Dependencies
 
