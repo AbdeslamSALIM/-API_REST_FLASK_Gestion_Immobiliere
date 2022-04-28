@@ -20,6 +20,7 @@ class ProprietaireModel(db.Model):
     def json(self):
         return { 'id' : self.id,'nom' : self.nom, 'prenom' : self.prenom, 'dateNaissance': str(self.dateNaissance)}
     
+    
     def save_to_db(self):
         db.session.add(self)
         db.session.commit()

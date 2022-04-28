@@ -1,5 +1,8 @@
+import logging
+
 from  flask_restful import Resource, reqparse
 from sqlalchemy import null
+from sqlalchemy.exc import SQLAlchemyError
 from models.bienImmobilier import BienImmobilierModel
 from models.proprietaire import ProprietaireModel
 
@@ -7,7 +10,7 @@ class BienImmobilierRegistre(Resource):
     
     parser = reqparse.RequestParser()
     parser.add_argument("id",
-                        type = int,
+                        type=int,
                         required = False
                         )
     
@@ -48,14 +51,21 @@ class BienImmobilierRegistre(Resource):
     def get(self):
         
         data = BienImmobilierRegistre.parser.parse_args()
-        
+        #process data ville with variable
         if data['ville']:
             
+            ville_request = data['ville'].strip()
             try:
-                biensImmobiliers = BienImmobilierModel.retrieve_bienImmob_by_city(data['ville'])
-                return {'Biens Immobiliers by city': list(map(lambda x : x.json(), biensImmobiliers))}
-            except:
+                biensImmobiliers = BienImmobilierModel.retrieve_bienImmob_by_city(ville_request)
+                resultat = list(map(lambda x : x.json(), biensImmobiliers))
+                if len(resultat) > 0:
+                    return {'Biens Immobiliers by city' : resultat}
+                else:
+                    return  {"message": "please check your city !"}, 200
+            except SQLAlchemyError as ex:
+                logging.error( "An error occurred in retrieving the element",exc_info=ex)
                 return  {"message": "An error occurred in retrieving the element."}, 500
+
         else :
             return {"message": "Bien Immobilier not  found "}, 201
         
@@ -63,16 +73,13 @@ class BienImmobilierRegistre(Resource):
     def post(self):
         
         data = BienImmobilierRegistre.parser.parse_args()
-
-        if data['nom'] and  data['description'] and data['ville'] and data['nb_pieces'] and data['caracteristiques_pieces'] and data['id_proprietaire']:
+ 
+        if data['nom'] and  data['description'] and data['ville'] and data['nb_pieces'] >= 1 and data['caracteristiques_pieces'] and data['id_proprietaire']:
             
             proprietaire = ProprietaireModel.find_by_id(data['id_proprietaire'])
             
             if proprietaire is not None:
-            
-                if int(proprietaire.id) == int(data['id_proprietaire']):
-                                
-                    bienImmoblier = BienImmobilierModel(data['nom'],
+                bienImmoblier = BienImmobilierModel(data['nom'],
                                                     data['description'],
                                                     data['type_bien'],
                                                     data['ville'],
@@ -81,22 +88,18 @@ class BienImmobilierRegistre(Resource):
                                                     data['id_proprietaire']
                                                     )
                     
-                    try:
-                        bienImmoblier.save_to_db()
-                        return {"message": "Bien Immobilier added successfully "}, 201
-                    
-                    except:
-                        return {"message": "An error occurred inserting the element."}, 500
-                else:
-                    return {"message": f" proprietaire with id {data['id_proprietaire']} not found ! "}, 400
+                try:
+                    bienImmoblier.save_to_db()
+                    return {"message": "Bien Immobilier added successfully "}, 201
+                except SQLAlchemyError as ex:
+                    logging.error( " An error occurred inserting the element ",exc_info=ex)                   
+                    return {"message": "An error occurred inserting the element."}, 500
             else:
+                logging.debug(f" proprietaire with id {data['id_proprietaire']} not found ! ")
                 return {"message": f" proprietaire with id {data['id_proprietaire']} not found ! "}, 400
-                
         else:
             return {"message": "verify your fields ! "}, 400
             
-       
-
 
     def put(self):
         data = BienImmobilierRegistre.parser.parse_args()
@@ -106,10 +109,8 @@ class BienImmobilierRegistre(Resource):
              # get bien immobilier by id
                 bienImmobilier = BienImmobilierModel.find_by_id(id)
                 if bienImmobilier is not None:
-                    
                     # check if proprietaire exist 
                     id_propr = ProprietaireModel.find_by_id(data['id_proprietaire'])
-                    
                     if id_propr:
         
                         if data['nom']:
@@ -124,17 +125,17 @@ class BienImmobilierRegistre(Resource):
                             bienImmobilier.nb_pieces = data['nb_pieces']
                         if data['caracteristiques_pieces']:
                             bienImmobilier.caracteristiques_pieces = data['caracteristiques_pieces']
-                        if data['id_proprietaire']:
-                            bienImmobilier.id_propr = data['id_proprietaire']
                     else :
                         return  {"message": " proprietaire  not found , check id_proprietaire"}, 400
                     
                 else :
-                    return  {"message": " Bien Immobilier not found "}, 400
+                    return  {"message": " Bien Immobilier not found !"}, 400
             
                 # update 
                 bienImmobilier.save_to_db()
-            except:
+                logging.info( " *** Bien Immobilier updated *** ")
+            except SQLAlchemyError as ex:
+                logging.error( " An error occurred updating the element ",exc_info=ex)
                 return {"message": "An error occurred updating the element."}, 500
             
         return bienImmobilier.json(), 200
@@ -148,43 +149,34 @@ class BienImmobilierRegistre(Resource):
         
         
         if id_bienImmobilier is not null and id_proprietaire_request is not null:
-            
-            try:
-                # search bien immoblier by id_bienImmobilier
-                bienImmobilier = BienImmobilierModel.find_by_id(id_bienImmobilier)
-                # get id proprietaire from table Bien immobilier dataBase
-                if bienImmobilier is not None:
-                    
-                    if int(id_proprietaire_request) == int(bienImmobilier.id_propr):
-                        if data['nom']:
-                                bienImmobilier.nom = data['nom']
-                        if data['description']:
-                            bienImmobilier.description = data['description']
-                        if data['type_bien']:
-                            bienImmobilier.type_bien = data['type_bien']
-                        if data['ville']:
-                            bienImmobilier.ville = data['ville']
-                        if data['nb_pieces']:
-                            bienImmobilier.nb_pieces = data['nb_pieces']
-                        if data['caracteristiques_pieces']:
-                            bienImmobilier.caracteristiques_pieces = data['caracteristiques_pieces']
-                    
+            # search bien immoblier by id_bienImmobilier
+            bienImmobilier = BienImmobilierModel.retrieve_by_id_Bien_and_id_propr(id_bienImmobilier,id_proprietaire_request)
+            # get id proprietaire from table Bien immobilier dataBase
+            if bienImmobilier is not None:
+                if data['nom']:
+                    bienImmobilier.nom = data['nom']
+                if data['description']:
+                    bienImmobilier.description = data['description']
+                if data['type_bien']:
+                    bienImmobilier.type_bien = data['type_bien']
+                if data['ville']:
+                    bienImmobilier.ville = data['ville']
+                if data['nb_pieces']:
+                    bienImmobilier.nb_pieces = data['nb_pieces']
+                if data['caracteristiques_pieces']:
+                    bienImmobilier.caracteristiques_pieces = data['caracteristiques_pieces']
+                try:
                     # update 
-                        bienImmobilier.save_to_db()
-                        
-                    else:
-                        return  {"message": f" proprietaire with id {id_proprietaire_request} is not an owner "}, 400
-                else:
-                    return  {"message": " Bien Immobilier not found "}, 400
+                    bienImmobilier.save_to_db()  
+                    logging.info( " *** Bien Immobilier updated *** ")
+                    return bienImmobilier.json(), 200 
+                except SQLAlchemyError as ex:
+                    logging.error( " An error occurred updating the element ",exc_info=ex)
+                    return {"message": "An error occurred updating the element."}, 500
                 
-            except:
-                pass
-        return bienImmobilier.json(), 200
+            else:
+                return  {"message": f" proprietaire with id {id_proprietaire_request} is not an owner "}, 400
             
-            
-            
-        
-
 
 class BienImmobilierList(Resource):
     def get(self):

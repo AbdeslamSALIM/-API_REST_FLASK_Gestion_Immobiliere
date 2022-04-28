@@ -12,6 +12,3 @@ DBHOST = os.environ['DBHOST']
 DBUSER = os.environ['DBUSER']
 DBPASS = os.environ['DBPASS']
 DBNAME = os.environ['DBNAME']
-
-
-

@@ -49,5 +49,9 @@ class BienImmobilierModel(db.Model):
     def retrieve_bienImmob_by_city(cls, ville):
         return cls.query.filter_by(ville = ville)
     
+    @classmethod
+    def retrieve_by_id_Bien_and_id_propr(cls, id_bienImmobilier, id_proprietaire):
+        return cls.query.filter_by(id=id_bienImmobilier,id_propr=id_proprietaire).first()
+
     
         
