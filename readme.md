@@ -1,6 +1,6 @@
-## Flask / SQLAlchemy Simple App
+## API REST FLASK Gestion Immobiliere
 
-API REST FLASK Gestion Immobiliere app using [Flask](http://flask.pocoo.org), [SQLAlchemy](http://www.sqlalchemy.org/) and the connecting [Flask-SQLAlchemy](http://flask-sqlalchemy.pocoo.org) library.
+API REST FLASK Gestion Immobiliere  using Flask, SQLAlchemy and the connecting Flask-SQLAlchemy library.
 
 
 ## Logical Data Model
@@ -15,7 +15,7 @@ pip install -r requirements.txt
 
 ### Edit informations Data Base
 
-Edit first Data Base Host, Data Base User, Data Base Password, Data Base NAME in `secrets.py`
+Edit first Data Base Host, Data Base User, Data Base Password, Data Base Name in `secrets.py`
 
 ```
 $ python secrets.py
@@ -23,7 +23,7 @@ $ python secrets.py
 
 ### Running the App
 
-To run the app, first run the `server.py`
+To run the microservice, first run the `server.py`
 
 ```
 $ python server.py
