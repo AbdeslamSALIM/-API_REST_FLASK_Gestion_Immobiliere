@@ -67,7 +67,7 @@ class BienImmobilierRegistre(Resource):
                 return  {"message": "An error occurred in retrieving the element."}, 500
 
         else :
-            return {"message": "Bien Immobilier not  found "}, 201
+            return {"message": "Bien Immobilier not  found "}, 200
         
     
     def post(self):
@@ -121,8 +121,10 @@ class BienImmobilierRegistre(Resource):
                             bienImmobilier.type_bien = data['type_bien']
                         if data['ville']:
                             bienImmobilier.ville = data['ville']
-                        if data['nb_pieces']:
+                        if data['nb_pieces'] >= 1:
                             bienImmobilier.nb_pieces = data['nb_pieces']
+                        else:
+                            return {"message": "verify your fields ! "}, 400
                         if data['caracteristiques_pieces']:
                             bienImmobilier.caracteristiques_pieces = data['caracteristiques_pieces']
                     else :
@@ -161,8 +163,10 @@ class BienImmobilierRegistre(Resource):
                     bienImmobilier.type_bien = data['type_bien']
                 if data['ville']:
                     bienImmobilier.ville = data['ville']
-                if data['nb_pieces']:
+                if data['nb_pieces'] >= 1 :
                     bienImmobilier.nb_pieces = data['nb_pieces']
+                else:
+                    return {"message": "verify your fields ! "}, 400
                 if data['caracteristiques_pieces']:
                     bienImmobilier.caracteristiques_pieces = data['caracteristiques_pieces']
                 try:

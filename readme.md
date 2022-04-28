@@ -15,7 +15,7 @@ pip install -r requirements.txt
 
 ### Edit informations Data Base
 
-Edit first Data Base HOST, Data Base User, Data Base Password, Data Base NAME in `secrets.py`
+Edit first Data Base Host, Data Base User, Data Base Password, Data Base NAME in `secrets.py`
 
 ```
 $ python secrets.py

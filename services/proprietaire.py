@@ -39,8 +39,6 @@ class ProprietaireRegistre(Resource):
             proprietaire = ProprietaireModel(data['nom'], data['prenom'], str(data['dateNaissance']))
             
             try:
-                # add exception sqlAlchemy
-                # add logger python
                 proprietaire.save_to_db()
             except SQLAlchemyError as ex:
                 logging.error( "A Data Base error occured",exc_info=ex)
